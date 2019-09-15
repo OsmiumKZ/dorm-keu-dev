@@ -2,7 +2,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework import status, generics
-from . import serializers, models, utils, constructor_docx, permissions
+from . import serializers, models, utils, constructor_docx, permissions, email
 from django.db.models import Q
 from django.http import FileResponse
 import os
@@ -92,6 +92,12 @@ class RequestViewAPI(generics.RetrieveUpdateDestroyAPIView):
     queryset = models.Request.objects.all()
     serializer_class = serializers.RequestSerializer.All
     permission_classes = (IsAdminUser,)
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+
+        if self.request.data['active'] == 1:
+            email.send_request_success(instance.email)
 
 
 class ReportsSortViewAPI(generics.ListAPIView):
